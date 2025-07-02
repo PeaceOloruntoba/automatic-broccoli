@@ -1,79 +1,22 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { ReactNode, useEffect } from "react";
+import { useAuthStore } from "@/lib/store";
 
-import { createContext, useContext, useEffect, useState } from "react"
-
-interface User {
-  id: string
-  email: string
-  firstName: string
-  lastName: string
-  isAdmin?: boolean
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-interface AuthContextType {
-  user: User | null
-  login: (email: string, password: string) => Promise<void>
-  logout: () => void
-  isLoading: boolean
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export function AuthProvider({ children }: AuthProviderProps) {
+  const { isLoading } = useAuthStore();
 
   useEffect(() => {
-    // Check for existing session
-    const checkAuth = async () => {
-      try {
-        // Simulate checking for existing session
-        const savedUser = localStorage.getItem("user")
-        if (savedUser) {
-          setUser(JSON.parse(savedUser))
-        }
-      } catch (error) {
-        console.error("Auth check failed:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+    // Check for existing session is handled by Zustand persist middleware
+  }, []);
 
-    checkAuth()
-  }, [])
-
-  const login = async (email: string, password: string) => {
-    try {
-      // Simulate login API call
-      const mockUser: User = {
-        id: "1",
-        email,
-        firstName: "John",
-        lastName: "Doe",
-        isAdmin: email.includes("admin"),
-      }
-
-      setUser(mockUser)
-      localStorage.setItem("user", JSON.stringify(mockUser))
-    } catch (error) {
-      throw new Error("Login failed")
-    }
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem("user")
-  }
-
-  return <AuthContext.Provider value={{ user, login, logout, isLoading }}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
+  return <>{children}</>;
 }
